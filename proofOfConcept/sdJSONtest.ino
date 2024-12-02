@@ -10,6 +10,8 @@
 #include "SPI.h"
 #include <ArduinoJson.h>
 
+#define FILENAME "/pairings.json"
+
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
   Serial.printf("Listing directory: %s\n", dirname);
 
@@ -182,17 +184,27 @@ void deleteFile(fs::FS &fs, const char * path){
 // 	return s;
 // }
 
+/**
+  writes values from a json doc object into the defined file
+*/
 void writeJSON(StaticJsonDocument<256> doc) {
-  File file = SD.open("/hello.json", FILE_WRITE);
+  File file = SD.open(FILENAME, FILE_WRITE);
   serializeJson(doc, file);
   file.close();
 }
 
-// void readJSON(StaticJsonDocument<256> doc) {
-//   File file = SD.open("/hello.json", FILE_READ);
-//   deserializeJson(doc, file);
-//   file.close();
-// }
+/**
+  Takes in a key & JSON document, returns the value as a string
+*/
+const char* readJSON(char* key, StaticJsonDocument<256> doc) {
+  File file = SD.open(FILENAME, FILE_READ);
+  // Serial.println("entered read JSON");
+  DeserializationError error = deserializeJson(doc, file);
+  // Serial.println("passed error");
+  const char* value = doc[key];
+  file.close();
+  return value;
+}
 
 void setup() {
   Serial.begin(9600);
@@ -216,17 +228,24 @@ void setup() {
   // JsonDocument doc;
 
   // Add values in the document
-  // doc["track1"] = 333;
-  // doc["track2"] = 157;
+
 
   StaticJsonDocument<256> doc;
-  doc["hello"] = "world";
+  // doc["hello"] = "world";
+  doc["track1"] = "333";
+  doc["track2"] = "157";
 
-  writeJSON(doc);
+  writeJSON(doc); //writes JSON doc to file 
 
-  readFile(SD, "/hello.json");
+  readFile(SD, FILENAME); //library function prints all contents of file
   Serial.println("");
-  deleteFile(SD, "/hello.json");
+
+  Serial.println("VALUES GO HERE");
+  Serial.println(readJSON("track1", doc));
+  Serial.println(readJSON("track2", doc));
+  Serial.println("VALUES END HERE");
+  
+  deleteFile(SD, FILENAME);
 }
 void loop() {
   // Serial.println("hmm uhhh stpot");

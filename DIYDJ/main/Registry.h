@@ -12,4 +12,5 @@ class Registry {
     struct RFIDTrackPair getPairByRFID(String RFID);
     struct RFIDTrackPair setRFIDTrackPair(String RFID, String track); // does not need to be implemented for demo
     int RFIDTrackPair removePairbyRFID(String RFID); // does not need to be implemented for demo
+
 }

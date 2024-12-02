@@ -1,27 +1,8 @@
-#include <Arduino.h>
 #include "AudioManager.h"
 
-AudioManager::initialize()
+AudioManager::AudioManager()
 {
-  Serial.begin(115200);
-  // Set microSD Card CS as OUTPUT and set HIGH
-  pinMode(SD_CS, OUTPUT); // FIXME may be an issue if nico also has to instantiate.
-  digitalWrite(SD_CS, HIGH);
-
-  // Initialize SPI bus for microSD Card
-  SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
-
-  // Start Serial Port
-  Serial.begin(115200);
-
-  // Start microSD Card
-  if (!SD.begin(SD_CS))
-  {
-    Serial.println("Error accessing microSD card!");
-    while (true)
-      ;
-  }
-  Serial.println("SD card initialized!");
+  
   audio = new Audio(true, I2S_DAC_CHANNEL_BOTH_EN);
   currentState.head_track = "";
   currentState.top_track = "";
@@ -43,10 +24,24 @@ AudioManager::updateTracks(struct AudioState current, struct AudioState next)
   }
 }
 
+AudioManager::getTrackFromState() {
+  size_t headlastindex = currentState.head_track.find_last_of("."); 
+  String rawHeadName = currentState.head_track.substr(0, headlastindex); 
+
+  size_t toplastindex = currentState.top_track.find_last_of("."); 
+  String rawTopName = currentState.top_track.substr(0, toplastindex); 
+
+  size_t bottomlastindex = currentState.bottom_track.find_last_of("."); 
+  String rawBottomName = currentState.bottom_track.substr(0, bottomlastindex); 
+
+  return rawHeadName + rawTopName + rawBottomName + ".mp3"
+}
+
 AudioManager::audioLoop() {
   audio.loop();
   if (!audio.isRunning()) {
     // we have hit the end of the loop!!!
-    
+    String nextTrackToPlay = getTrackFromState();
+    audio.connecttoFS(SD, nextTrackToPlay); 
   }
 }

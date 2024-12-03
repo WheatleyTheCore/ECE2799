@@ -23,8 +23,9 @@ class AudioManager
 public:
   struct AudioState nextState;
   int initialize();
-  struct AudioState updateTracks(AudioState newAudioState);
+  struct AudioState updateTracks(struct AudioState newAudioState);
   void audioLoop();
+  String getTrackFromState();
 
 private:
   Audio audio;

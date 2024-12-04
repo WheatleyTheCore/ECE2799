@@ -3,14 +3,12 @@
 
 #include "Registry.h"
 
-static StaticJsonDocument<256> dock;
 
 //define tracklist here
 // doc["hello"] = "world";
-doc["track1"] = "333";
-doc["track2"] = "157";
 
-void readFile(fs::FS &fs, const char * path){
+
+void Registry::readFile(fs::FS &fs,  String path){
   Serial.printf("Reading file: %s\n", path);
 
   File file = fs.open(path);
@@ -26,7 +24,7 @@ void readFile(fs::FS &fs, const char * path){
   file.close();
 }
 
-void writeFile(fs::FS &fs, const char * path, const char * message){
+void Registry::writeFile(fs::FS &fs,  String path,  String message){
   Serial.printf("Writing file: %s\n", path);
 
   File file = fs.open(path, FILE_WRITE);
@@ -41,49 +39,49 @@ void writeFile(fs::FS &fs, const char * path, const char * message){
   }
   file.close();
 }
+//
+//void deleteFile(fs::FS &fs, const String path){
+//  Serial.printf("Deleting file: %s\n", path);
+//  if(fs.remove(path)){
+//    Serial.println("File deleted");
+//  } else {
+//    Serial.println("Delete failed");
+//  }
+//}
 
-void deleteFile(fs::FS &fs, const char * path){
-  Serial.printf("Deleting file: %s\n", path);
-  if(fs.remove(path)){
-    Serial.println("File deleted");
-  } else {
-    Serial.println("Delete failed");
-  }
-}
-
-void writeJSON(StaticJsonDocument<256> doc) {
+void Registry::writeJSONFile(JsonDocument doc) {
   File file = SD.open(FILENAME, FILE_WRITE);
   serializeJson(doc, file);
   file.close();
 }
 
 /**
-  Takes in a key & JSON document, returns the value as a string
+  Takes in a key & JSON document, returns the value as a String
 */
-const char* readJSON(char* key, StaticJsonDocument<256> doc) {
+String Registry::readJSON(String key, JsonDocument doc) {
   File file = SD.open(FILENAME, FILE_READ);
   // Serial.println("entered read JSON");
   DeserializationError error = deserializeJson(doc, file);
   // Serial.println("passed error");
-  const char* value = doc[key];
+  String value = doc[key];
   file.close();
   return value;
 }
 
-struct RFIDTrackPair getPairByRFID(String RFID) {
+struct RFIDTrackPair Registry::getPairByRFID(String RFID) {
     struct RFIDTrackPair pair;
     pair.RFID = RFID;
-    pair.track = readJSON(RFID, doc);
+    pair.track = this->readJSON(RFID, dock);
     return pair;
 }
 
-Registry::initialize() {
-    if(!SD.begin(5)){
-        Serial.println("Card Mount Failed");
-        return;
-    } else {
-        Serial.println("SD initialized");
-    }
+void Registry::initialize() {
+//    if(!SD.begin(5)){
+//        Serial.println("Card Mount Failed");
+//        return;
+//    } else {
+//        Serial.println("SD initialized");
+//    }
 
     uint8_t cardType = SD.cardType();
 
@@ -92,5 +90,9 @@ Registry::initialize() {
         return;  
     }
 
-    writeJSON(dock); //writes JSON doc to file
+    dock["testUUID1"] = "head2";
+    dock["testUUID2"] = "top2";
+    dock["testUUID3"] = "bottom2";
+
+    this->writeJSONFile(dock); //writes JSON doc to file
 }

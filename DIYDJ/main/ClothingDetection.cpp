@@ -5,4 +5,4 @@ class ClothingDetection {
   public:
     struct CothingState getCurrentTags();
   
-}
+};

@@ -10,7 +10,7 @@ TaskHandle_t TaskCore1;
 
 // microSD Card Reader connections
 #define SD_CS          5
-#define SPI_MOSI      23 
+#define SPI_MOSI      23
 #define SPI_MISO      19
 #define SPI_SCK       18
 
@@ -24,7 +24,7 @@ Registry registry;
 AudioState nextAudioState = {"", "", ""};
 
 unsigned long msAtLastCheck = 0; // ms elapsed since board startup, to be used in timing stuff (delay is blocking and since we're doing audio stuff we don't want that)
-unsigned int timeToWaitBeforeTestFitChecks = 10000;
+unsigned int timeToWaitBeforeTestFitChecks = 5000;
 char uuid1[] = "testUUID1";
 char uuid2[] = "testUUID2";
 char uuid3[] = "testUUID3";
@@ -52,52 +52,77 @@ void setup()
       ;
   }
   Serial.println("SD card initialized!");
+
+  Serial.println("Bluetooth Enabled");
+
   registry.initialize();
   Serial.println("Registry initialized successfully!");
 
   audio_manager.updateTracks(nextAudioState);
-  xTaskCreatePinnedToCore(mainBusinessLogic, "TaskCore0", 10000, NULL, 2, &TaskCore0, 0);
+  xTaskCreatePinnedToCore(mainBusinessLogic, "TaskCore0", 10000, NULL, 2, &TaskCore0, 1);
   xTaskCreatePinnedToCore(audioHandler, "TaskCore1", 10000, NULL, 1, &TaskCore1, 0);
 
 }
 
 void mainBusinessLogic(void *pvParameters) {
-   for (;;) {
+  for (;;) {
 
     // will need to be edited to check the fit, and if it's different update the tracks.
-    
-    if ((millis() - msAtLastCheck) > timeToWaitBeforeTestFitChecks && !headEnabled) {
-      Serial.println(registry.getPairByRFID(uuid1).track.c_str());
-      nextAudioState.head_track = registry.getPairByRFID(uuid1).track.c_str();
-      audio_manager.updateTracks(nextAudioState);
-      headEnabled = true;
+    while (Serial.available()) {
+      String serialData = Serial.readString();
+      if (serialData.indexOf("head") > -1) {
+        Serial.println("Starting head");
+
+        nextAudioState.head_track = registry.getPairByRFID(serialData.c_str()).track.c_str();
+        audio_manager.updateTracks(nextAudioState);
+      }
+      if (serialData.indexOf("top") > -1) {
+        nextAudioState.top_track = registry.getPairByRFID(serialData.c_str()).track.c_str();
+        Serial.println("Starting Top");
+        audio_manager.updateTracks(nextAudioState);
+      }
+      if (serialData.indexOf("bottom") > -1) {
+        Serial.println("Starting bottom");
+
+        nextAudioState.bottom_track = registry.getPairByRFID(serialData.c_str()).track.c_str();
+        audio_manager.updateTracks(nextAudioState);
+      }
     }
-    if ((millis() - msAtLastCheck) > timeToWaitBeforeTestFitChecks * 2 && !topEnabled) {
-      Serial.println(registry.getPairByRFID(uuid2).track.c_str());
-      nextAudioState.top_track = registry.getPairByRFID(uuid2).track.c_str();
-      audio_manager.updateTracks(nextAudioState);
-      topEnabled = true;
-    }
-    if ((millis() - msAtLastCheck) > timeToWaitBeforeTestFitChecks * 3 && !bottomEnabled) {
-      Serial.println("Starting bottom track");
-      nextAudioState.bottom_track = registry.getPairByRFID(uuid3).track.c_str();
-      audio_manager.updateTracks(nextAudioState);
-      bottomEnabled = true;
-    }
+
+
+
+    //    if ((millis() - msAtLastCheck) > timeToWaitBeforeTestFitChecks && !headEnabled) {
+    //      Serial.println(registry.getPairByRFID(uuid1).track.c_str());
+    //      nextAudioState.head_track = registry.getPairByRFID(uuid1).track.c_str();
+    //      audio_manager.updateTracks(nextAudioState);
+    //      headEnabled = true;
+    //    }
+    //    if ((millis() - msAtLastCheck) > timeToWaitBeforeTestFitChecks * 2 && !topEnabled) {
+    //      Serial.println(registry.getPairByRFID(uuid2).track.c_str());
+    //      nextAudioState.top_track = registry.getPairByRFID(uuid2).track.c_str();
+    //      audio_manager.updateTracks(nextAudioState);
+    //      topEnabled = true;
+    //    }
+    //    if ((millis() - msAtLastCheck) > timeToWaitBeforeTestFitChecks * 3 && !bottomEnabled) {
+    //      Serial.println("Starting bottom track");
+    //      nextAudioState.bottom_track = registry.getPairByRFID(uuid3).track.c_str();
+    //      audio_manager.updateTracks(nextAudioState);
+    //      bottomEnabled = true;
+    //    }
     delay(200);
-   }
+  }
 
 }
 
 // needs its own process so that it has no latency
 void audioHandler(void *pvParameters) {
   for (;;) {
-      audio_manager.audioLoop();
-      vTaskDelay(25);
+    audio_manager.audioLoop();
+    delay(25);
   }
 }
 
 void loop()
 {
-  
+
 }

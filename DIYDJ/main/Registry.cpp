@@ -71,7 +71,11 @@ String Registry::readJSON(String key, JsonDocument doc) {
 struct RFIDTrackPair Registry::getPairByRFID(String RFID) {
     struct RFIDTrackPair pair;
     pair.RFID = RFID;
-    pair.track = this->readJSON(RFID, dock);
+    if (RFID != "") {
+          pair.track = this->readJSON(RFID, dock);
+    } else {
+      pair.track = "";
+    }
     return pair;
 }
 
@@ -90,9 +94,12 @@ void Registry::initialize() {
         return;  
     }
 
-    dock["testUUID1"] = "head2";
-    dock["testUUID2"] = "top2";
-    dock["testUUID3"] = "bottom2";
+    dock["head1"] = "head1";
+    dock["top1"] = "top1";
+    dock["bottom1"] = "bottom1";
+    dock["head2"] = "head2";
+    dock["top2"] = "top2";
+    dock["bottom2"] = "bottom2";
 
     this->writeJSONFile(dock); //writes JSON doc to file
 }

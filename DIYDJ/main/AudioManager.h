@@ -20,8 +20,9 @@ public:
   void audioLoop();
   string getTrackFromState();
   string trackToPlay;
+  string currentlyPlayingTrack;
+
 
 private:
   struct AudioState currentState; // should technically be private with getter and setter function
-  string currentlyPlayingTrack;
 };

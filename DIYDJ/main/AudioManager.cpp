@@ -3,7 +3,7 @@
 AudioManager::AudioManager()
 {
   this->trackToPlay = "";
-  this->currentlyPlayingTrack = "";
+  this->currentlyPlayingTrack = "top1";
   this->currentState.head_track = "";
   this->currentState.top_track = "";
   this->currentState.bottom_track = "";

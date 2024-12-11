@@ -2,13 +2,20 @@
 
 #include <SPI.h>
 #include <MFRC522.h>
+#include <SD.h>
 
 #define SS_PIN 5
-#define RST_PIN 21
+#define RST_PIN 22
+#define SPI2_CS 15
+#define SPI2_MOSI        13
+#define SPI2_MISO        12
+#define SPI2_SCK         14
  
 MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
 
 MFRC522::MIFARE_Key key; 
+
+SPIClass spiSD(HSPI);
 
 // Init array that will store new NUID 
 byte nuidPICC[4];
@@ -16,19 +23,30 @@ byte nuidPICC[4];
 
 
 void setup() { 
-  pinMode(4, OUTPUT);
-  Serial.begin(9600);
+  Serial.begin(115200);
+  Serial.println("entered setup");
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init(); // Init MFRC522 
-  digitalWrite(4, HIGH);
 
   for (byte i = 0; i < 6; i++) {
     key.keyByte[i] = 0xFF;
   }
 
+  rfid.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader details
+
   Serial.println(F("This code scan the MIFARE Classsic NUID."));
   Serial.print(F("Using the following key:"));
   printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
+
+  pinMode(SPI2_CS, OUTPUT); // FIXME may be an issue if nico also has to instantiate.
+  digitalWrite(SPI2_CS, HIGH);
+  spiSD.begin(SPI2_SCK, SPI2_MISO, SPI2_MOSI);
+  if (!SD.begin(SPI2_CS, spiSD))
+  {
+    Serial.println("Error accessing microSD card!");
+  }
+  Serial.println("SD card initialized!");
+
 }
  
 void loop() {
